@@ -1,0 +1,43 @@
+# A COMPOSITE ACTION: several steps packaged as one reusable step.
+#   - the file must be called action.yml (or action.yaml)
+#   - it declares "using: composite"
+#   - every "run" step needs its own "shell:"
+# Callers use it like any other action:
+#   - uses: nsinha-livevox/github-actions-workflows/.github/actions/setup-python-env@v1
+#     with:
+#       python-version: '3.12'
+
+name: Set up Python
+description: Installs Python (with the pip cache switched on) and the project's requirements.
+
+inputs:
+  python-version:
+    description: Python version to install, for example 3.12
+    required: false
+    default: '3.12'
+  requirements:
+    description: Path to the requirements file
+    required: false
+    default: requirements.txt
+
+outputs:
+  python-version:
+    description: The exact Python version that was installed
+    value: ${{ steps.py.outputs.python-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Python
+      id: py
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip                                   # reuse downloaded packages between runs
+        cache-dependency-path: ${{ inputs.requirements }}
+
+    - name: Install requirements
+      shell: bash
+      env:
+        REQUIREMENTS: ${{ inputs.requirements }}
+      run: python -m pip install -r "$REQUIREMENTS"

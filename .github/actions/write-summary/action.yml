@@ -1,0 +1,34 @@
+# A second, very small COMPOSITE ACTION: write a Markdown block to the run's Summary page.
+#
+#   - uses: nsinha-livevox/github-actions-workflows/.github/actions/write-summary@v1
+#     with:
+#       title: Build
+#       message: Version 1.0.7 is ready
+
+name: Write job summary
+description: Adds a short Markdown block to the job summary page of the workflow run.
+
+inputs:
+  title:
+    description: Heading of the block
+    required: true
+  message:
+    description: Text under the heading (Markdown allowed)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Write summary
+      shell: bash
+      # Inputs go through env: variables instead of being pasted into the script. That way a
+      # value containing quotes or shell characters can never change what the script does.
+      env:
+        TITLE: ${{ inputs.title }}
+        MESSAGE: ${{ inputs.message }}
+      run: |
+        {
+          echo "### ${TITLE}"
+          echo
+          echo "${MESSAGE}"
+        } >> "$GITHUB_STEP_SUMMARY"
